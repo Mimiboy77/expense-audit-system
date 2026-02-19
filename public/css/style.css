@@ -1,0 +1,700 @@
+/* =============================================
+   RESET AND BASE
+   ============================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* =============================================
+   NAVBAR
+   Used in: views/partials/navbar.ejs
+   ============================================= */
+
+.navbar {
+  background-color: #1a1a2e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand a {
+  color: #e94560;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+}
+
+.navbar-links li a {
+  color: #ccc;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.navbar-links li a:hover {
+  color: #e94560;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+/* Logout button in navbar */
+.btn-logout {
+  background-color: #e94560;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #c73652;
+}
+
+/* =============================================
+   PAGE CONTAINER
+   Used in: all authenticated pages
+   ============================================= */
+
+.page-container {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 24px;
+  flex: 1;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 1.5rem;
+  color: #1a1a2e;
+}
+
+/* =============================================
+   AUTH PAGES
+   Used in: views/auth/login.ejs, views/auth/register.ejs
+   ============================================= */
+
+.auth-container {
+  max-width: 420px;
+  margin: 80px auto;
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.auth-container h2 {
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  color: #1a1a2e;
+  text-align: center;
+}
+
+.auth-container p {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.auth-container p a {
+  color: #e94560;
+  font-weight: 600;
+}
+
+/* =============================================
+   FORM GROUPS
+   Used in: all forms across all views
+   ============================================= */
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #fafafa;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #e94560;
+  background-color: #fff;
+}
+
+/* =============================================
+   BUTTONS
+   Used in: all views
+   ============================================= */
+
+.btn-primary {
+  display: inline-block;
+  background-color: #e94560;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary:hover {
+  background-color: #c73652;
+}
+
+.btn-secondary {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 12px;
+  font-family: inherit;
+}
+
+.btn-secondary:hover {
+  background-color: #ddd;
+}
+
+/* Small action button used inside tables */
+.btn-small {
+  display: inline-block;
+  background-color: #1a1a2e;
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  transition: background-color 0.2s;
+}
+
+.btn-small:hover {
+  background-color: #e94560;
+}
+
+/* =============================================
+   ALERTS
+   Used in: login.ejs, register.ejs, submit-expense.ejs,
+            approval-decision.ejs
+   ============================================= */
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+}
+
+.alert-error {
+  background-color: #fdecea;
+  color: #b71c1c;
+  border-left: 4px solid #e53935;
+}
+
+.alert-success {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border-left: 4px solid #43a047;
+}
+
+/* =============================================
+   DASHBOARD
+   Used in: views/dashboard.ejs
+   ============================================= */
+
+.dashboard-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 24px;
+  flex: 1;
+}
+
+.dashboard-container h1 {
+  font-size: 1.8rem;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+}
+
+.role-badge {
+  display: inline-block;
+  background-color: #e94560;
+  color: #fff;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+  margin-bottom: 32px;
+}
+
+/* Grid of action cards on the dashboard */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 4px solid #e94560;
+}
+
+.card h3 {
+  font-size: 1.05rem;
+  color: #1a1a2e;
+}
+
+.card p {
+  font-size: 0.85rem;
+  color: #777;
+  flex: 1;
+}
+
+/* =============================================
+   DATA TABLES
+   Used in: expenses.ejs, approvals.ejs, audit-logs.ejs
+   ============================================= */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.data-table thead {
+  background-color: #1a1a2e;
+  color: #fff;
+}
+
+.data-table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s;
+}
+
+.data-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.data-table tbody td {
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: #444;
+}
+
+/* =============================================
+   STATUS BADGES
+   Used in: expenses.ejs, expense.ejs, approvals.ejs,
+            audit-logs.ejs
+   ============================================= */
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Expense statuses */
+.status-submitted {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.status-approved {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-rejected {
+  background-color: #fdecea;
+  color: #b71c1c;
+}
+
+.status-paid {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+/* Audit log action badges */
+.action-created {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.action-updated {
+  background-color: #fff9c4;
+  color: #f57f17;
+}
+
+.action-approved {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.action-rejected {
+  background-color: #fdecea;
+  color: #b71c1c;
+}
+
+.action-paid {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+/* =============================================
+   DETAIL CARD
+   Used in: views/expenses/expense.ejs
+   ============================================= */
+
+.detail-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-card p {
+  font-size: 0.92rem;
+  color: #444;
+}
+
+.detail-card p strong {
+  color: #1a1a2e;
+  margin-right: 6px;
+}
+
+/* =============================================
+   SECTIONS
+   Used in: views/expenses/expense.ejs
+   ============================================= */
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section h3 {
+  font-size: 1.1rem;
+  color: #1a1a2e;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+/* =============================================
+   APPROVAL CARDS
+   Used in: views/expenses/expense.ejs
+   ============================================= */
+
+.approval-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  border-left: 4px solid #1a1a2e;
+}
+
+.approval-card p {
+  font-size: 0.88rem;
+  color: #444;
+}
+
+.approval-comment {
+  margin-top: 8px;
+  font-style: italic;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+/* =============================================
+   COMMENTS
+   Used in: views/expenses/expense.ejs
+   ============================================= */
+
+.comment-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  border-left: 4px solid #e94560;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #1a1a2e;
+  margin-bottom: 6px;
+}
+
+.comment-role {
+  font-weight: 400;
+  color: #999;
+  font-size: 0.82rem;
+}
+
+.comment-card p {
+  font-size: 0.88rem;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.comment-card small {
+  font-size: 0.76rem;
+  color: #aaa;
+}
+
+/* Comment submission form */
+.comment-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  background-color: #fafafa;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-color: #e94560;
+  background-color: #fff;
+}
+
+/* =============================================
+   FILTER FORM
+   Used in: views/audit-logs.ejs, views/reports.ejs
+   ============================================= */
+
+.filter-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.filter-form input,
+.filter-form select {
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background-color: #fff;
+  font-family: inherit;
+  min-width: 200px;
+}
+
+.filter-form input:focus,
+.filter-form select:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+/* =============================================
+   EMPTY STATE
+   Used in: expenses.ejs, approvals.ejs, audit-logs.ejs
+   ============================================= */
+
+.empty-state {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.95rem;
+  padding: 60px 0;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* =============================================
+   ERROR PAGE
+   Used in: views/error.ejs
+   ============================================= */
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.error-code {
+  font-size: 6rem;
+  font-weight: 800;
+  color: #e94560;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+/* =============================================
+   FOOTER
+   Used in: views/partials/footer.ejs
+   ============================================= */
+
+.footer {
+  background-color: #1a1a2e;
+  color: #aaa;
+  text-align: center;
+  padding: 16px 24px;
+  font-size: 0.8rem;
+  margin-top: auto;
+}
+
+/* =============================================
+   RESPONSIVE — Mobile adjustments
+   ============================================= */
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .navbar-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table thead {
+    display: none; /* Hide table headers on small screens */
+  }
+
+  .data-table tbody td {
+    display: block;
+    padding: 8px 16px;
+  }
+
+  .data-table tbody tr {
+    margin-bottom: 16px;
+    display: block;
+    border: 1px solid #eee;
+    border-radius: 8px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .auth-container {
+    margin: 40px 16px;
+    padding: 28px 20px;
+  }
+}

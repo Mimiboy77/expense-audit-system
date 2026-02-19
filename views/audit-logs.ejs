@@ -1,0 +1,56 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="page-container">
+  <h2>Audit Logs</h2>
+
+  <!-- Filter by specific expense -->
+  <form action="/audit-logs" method="GET" class="filter-form">
+    <input
+      type="text"
+      name="expenseId"
+      placeholder="Filter by Expense ID (optional)"
+    />
+    <button type="submit" class="btn-primary">Filter</button>
+    <a href="/audit-logs" class="btn-secondary">Clear</a>
+  </form>
+
+  <% if (logs.length === 0) { %>
+    <p class="empty-state">No audit logs found.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Expense</th>
+          <th>Action</th>
+          <th>Performed By</th>
+          <th>Role</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(log => { %>
+          <tr>
+            <td>
+              <!-- Link to the expense this log entry belongs to -->
+              <a href="/expenses/<%= log.expenseId?._id %>">
+                <%= log.expenseId?.category %> —
+                ₦<%= log.expenseId?.amount?.toLocaleString() %>
+              </a>
+            </td>
+            <td>
+              <span class="status-badge action-<%= log.action %>">
+                <%= log.action %>
+              </span>
+            </td>
+            <td><%= log.performedBy?.name || "N/A" %></td>
+            <td><%= log.performedBy?.role || "N/A" %></td>
+            <td><%= new Date(log.timestamp).toLocaleString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('./partials/footer') %>

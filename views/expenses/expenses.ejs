@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <div class="page-header">
+    <h2>My Expenses</h2>
+    <a href="/expenses/submit" class="btn-primary">+ Submit New</a>
+  </div>
+
+  <% if (expenses.length === 0) { %>
+    <p class="empty-state">You have not submitted any expenses yet.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Amount (₦)</th>
+          <th>Status</th>
+          <th>Month / Year</th>
+          <th>Department</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% expenses.forEach(expense => { %>
+          <tr>
+            <td><%= expense.category %></td>
+            <td>₦<%= expense.amount.toLocaleString() %></td>
+
+            <!-- Color the status badge based on current value -->
+            <td>
+              <span class="status-badge status-<%= expense.status %>">
+                <%= expense.status %>
+              </span>
+            </td>
+
+            <td><%= expense.month %>/<%= expense.year %></td>
+            <td><%= expense.departmentId?.name || "N/A" %></td>
+            <td>
+              <a href="/expenses/<%= expense._id %>" class="btn-small">
+                View
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,53 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="dashboard-container">
+  <h1>Welcome, <%= user.name %></h1>
+  <p class="role-badge"><%= user.role %></p>
+
+  <div class="dashboard-cards">
+
+    <!-- Every role sees this -->
+    <div class="card">
+      <h3>My Expenses</h3>
+      <p>View and track all your submitted expenses</p>
+      <a href="/expenses" class="btn-primary">View Expenses</a>
+    </div>
+
+    <!-- Employee gets a submit shortcut -->
+    <% if (user.role === "employee") { %>
+      <div class="card">
+        <h3>Submit Expense</h3>
+        <p>Submit a new expense for approval</p>
+        <a href="/expenses/submit" class="btn-primary">Submit Now</a>
+      </div>
+    <% } %>
+
+    <!-- Manager and finance see pending approvals -->
+    <% if (user.role === "manager" || user.role === "finance") { %>
+      <div class="card">
+        <h3>Approvals</h3>
+        <p>Review and action pending expense approvals</p>
+        <a href="/approvals" class="btn-primary">View Approvals</a>
+      </div>
+    <% } %>
+
+    <!-- Finance only cards -->
+    <% if (user.role === "finance") { %>
+      <div class="card">
+        <h3>Audit Logs</h3>
+        <p>View the full immutable audit trail</p>
+        <a href="/audit-logs" class="btn-primary">View Logs</a>
+      </div>
+
+      <div class="card">
+        <h3>Reports</h3>
+        <p>Generate monthly expense reports as CSV</p>
+        <a href="/reports" class="btn-primary">Generate Report</a>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+
+<%- include('./partials/footer') %>

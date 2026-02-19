@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+
+<div class="auth-container">
+  <h2>Create an Account</h2>
+
+  <!-- Show error if registration fails -->
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <form action="/register" method="POST">
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        placeholder="Enter your full name"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Enter your email"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Create a password"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="role">Role</label>
+      <select id="role" name="role" required>
+        <option value="employee">Employee</option>
+        <option value="manager">Manager</option>
+        <option value="finance">Finance</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+  <label for="department">Department</label>
+  <select id="department" name="department" required>
+    <option value="">Select your department</option>
+    <% departments.forEach(dept => { %>
+      <option value="<%= dept._id %>">
+        <%= dept.name %>
+      </option>
+    <% }) %>
+  </select>
+</div>
+
+    <button type="submit" class="btn-primary">Register</button>
+  </form>
+
+  <p>Already have an account? <a href="/login">Login here</a></p>
+</div>
+
+<%- include('../partials/footer') %>

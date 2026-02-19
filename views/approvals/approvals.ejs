@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Approvals</h2>
+
+  <!-- SECTION 1: Pending expenses waiting for a decision -->
+  <div class="section">
+    <h3>Pending Expenses</h3>
+
+    <% if (pendingExpenses.length === 0) { %>
+      <p class="empty-state">No pending expenses require your approval.</p>
+    <% } else { %>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Category</th>
+            <th>Amount (₦)</th>
+            <th>Month / Year</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pendingExpenses.forEach(expense => { %>
+            <tr>
+              <td><%= expense.userId?.name %></td>
+              <td><%= expense.departmentId?.name %></td>
+              <td><%= expense.category %></td>
+              <td>₦<%= expense.amount.toLocaleString() %></td>
+              <td><%= expense.month %>/<%= expense.year %></td>
+              <td>
+                 <a href="/approvals/decision/<%= expense._id %>"
+                  class="btn-small"
+                >
+                  Review
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- SECTION 2: Past decisions already made -->
+  <div class="section">
+    <h3>Past Decisions</h3>
+
+    <% if (pastDecisions.length === 0) { %>
+      <p class="empty-state">You have not made any approval decisions yet.</p>
+    <% } else { %>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Amount (₦)</th>
+            <th>Your Decision</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pastDecisions.forEach(approval => { %>
+            <tr>
+              <td><%= approval.expenseId?.category || "N/A" %></td>
+              <td>
+                ₦<%= approval.expenseId?.amount?.toLocaleString() || "N/A" %>
+              </td>
+              <td>
+                <span class="status-badge status-<%= approval.decision %>">
+                  <%= approval.decision %>
+                </span>
+              </td>
+              <td>
+                <%= new Date(approval.createdAt).toLocaleDateString() %>
+              </td>
+              <td>
+                <a href="/expenses/<%= approval.expenseId?._id %>"
+                  class="btn-small"
+                >
+                  View Expense
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

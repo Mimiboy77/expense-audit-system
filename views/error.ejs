@@ -1,0 +1,9 @@
+<%- include('./partials/header') %>
+
+<div class="error-container">
+  <h1 class="error-code"><%= statusCode %></h1>
+  <p class="error-message"><%= message %></p>
+  <a href="/dashboard" class="btn-primary">Back to Dashboard</a>
+</div>
+
+<%- include('./partials/footer') %>

@@ -1,0 +1,71 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Review Expense</h2>
+
+  <!-- Show full expense details before the approver makes a decision -->
+  <div class="detail-card">
+    <p><strong>Submitted By:</strong> <%= expense.userId?.name %></p>
+    <p><strong>Email:</strong> <%= expense.userId?.email %></p>
+    <p><strong>Department:</strong> <%= expense.departmentId?.name %></p>
+    <p><strong>Category:</strong> <%= expense.category %></p>
+    <p>
+      <strong>Amount:</strong>
+      ₦<%= expense.amount.toLocaleString() %>
+    </p>
+    <p><strong>Period:</strong> <%= expense.month %>/<%= expense.year %></p>
+    <p>
+      <strong>Status:</strong>
+      <span class="status-badge status-<%= expense.status %>">
+        <%= expense.status %>
+      </span>
+    </p>
+
+    <% if (expense.receipt) { %>
+      <p>
+        <strong>Receipt:</strong>
+        <a href="/<%= expense.receipt %>" target="_blank">View Receipt</a>
+      </p>
+    <% } %>
+  </div>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <!-- Decision form -->
+  <div class="detail-card">
+    <h3>Make Your Decision</h3>
+
+    <form action="/approvals" method="POST">
+      <!-- Pass expenseId to the controller -->
+      <input type="hidden" name="expenseId" value="<%= expense._id %>" />
+
+      <div class="form-group">
+        <label for="decision">Decision</label>
+        <select id="decision" name="decision" required>
+          <option value="">Select a decision</option>
+          <option value="approved">Approve</option>
+          <option value="rejected">Reject</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="comments">Comments (optional)</label>
+        <textarea
+          id="comments"
+          name="comments"
+          rows="4"
+          placeholder="Add any notes or reason for your decision..."
+        ></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">Submit Decision</button>
+    </form>
+  </div>
+
+  <a href="/approvals" class="btn-secondary">← Back to Approvals</a>
+</div>
+
+<%- include('../partials/footer') %>

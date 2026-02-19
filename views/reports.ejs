@@ -1,0 +1,40 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="page-container">
+  <h2>Generate Monthly Report</h2>
+  <p>Select a month and year to download a CSV of all expenses for that period.</p>
+
+  <form action="/reports" method="GET" class="filter-form">
+
+    <div class="form-group">
+      <label for="month">Month</label>
+      <select id="month" name="month" required>
+        <option value="">Select month</option>
+        <% const months = [
+          "January","February","March","April","May","June",
+          "July","August","September","October","November","December"
+        ];
+        months.forEach((m, i) => { %>
+          <option value="<%= i + 1 %>"><%= m %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="year">Year</label>
+      <input
+        type="number"
+        id="year"
+        name="year"
+        value="<%= new Date().getFullYear() %>"
+        min="2020"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn-primary">Download CSV Report</button>
+  </form>
+</div>
+
+<%- include('./partials/footer') %>

@@ -1,0 +1,32 @@
+<nav class="navbar">
+  <div class="navbar-brand">
+    <a href="/dashboard">ExpenseAudit</a>
+  </div>
+
+  <ul class="navbar-links">
+    <!-- All roles see their own expenses -->
+    <li><a href="/expenses">My Expenses</a></li>
+
+    <!-- Only manager and finance see approvals -->
+    <% if (user.role === "manager" || user.role === "finance") { %>
+      <li><a href="/approvals">Approvals</a></li>
+    <% } %>
+
+    <!-- Only finance sees audit logs and reports -->
+    <% if (user.role === "finance") { %>
+      <li><a href="/audit-logs">Audit Logs</a></li>
+      <li><a href="/reports">Reports</a></li>
+    <% } %>
+
+    <!-- Manager and finance see department budget -->
+    <% if (user.role === "manager" || user.role === "finance") { %>
+      <li><a href="/budget">Budget</a></li>
+    <% } %>
+  </ul>
+
+  <div class="navbar-user">
+    <!-- Show logged in user name and role -->
+    <span><%= user.name %> (<%= user.role %>)</span>
+    <a href="/logout" class="btn-logout">Logout</a>
+  </div>
+</nav>

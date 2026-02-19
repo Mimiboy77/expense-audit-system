@@ -1,0 +1,102 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Expense Details</h2>
+
+  <!-- Core expense info -->
+  <div class="detail-card">
+    <p><strong>Category:</strong> <%= expense.category %></p>
+    <p><strong>Amount:</strong> ₦<%= expense.amount.toLocaleString() %></p>
+    <p><strong>Status:</strong>
+      <span class="status-badge status-<%= expense.status %>">
+        <%= expense.status %>
+      </span>
+    </p>
+    <p><strong>Submitted by:</strong> <%= expense.userId?.name %></p>
+    <p><strong>Department:</strong> <%= expense.departmentId?.name %></p>
+    <p><strong>Period:</strong> <%= expense.month %>/<%= expense.year %></p>
+
+    <!-- Show receipt if one was uploaded -->
+    <% if (expense.receipt) { %>
+      <p>
+        <strong>Receipt:</strong>
+        <a href="/<%= expense.receipt.replace(/\\/g, '/').replace('public/', '') %>" target="_blank">
+  View Receipt
+</a>
+      </p>
+    <% } %>
+  </div>
+
+  <!-- Approval decisions on this expense -->
+  <div class="section">
+    <h3>Approval Decisions</h3>
+    <% if (approvals.length === 0) { %>
+      <p>No approval decisions yet.</p>
+    <% } else { %>
+      <% approvals.forEach(approval => { %>
+        <div class="approval-card">
+          <p>
+            <strong><%= approval.approverId?.name %></strong>
+            (<%= approval.approverId?.role %>) —
+            <span class="status-badge status-<%= approval.decision %>">
+              <%= approval.decision %>
+            </span>
+          </p>
+          <% if (approval.comments) { %>
+            <p class="approval-comment"><%= approval.comments %></p>
+          <% } %>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+
+  <!-- Manager or finance can make a decision from here -->
+  <% if (user.role === "manager" || user.role === "finance") { %>
+    <div class="section">
+      
+        href="/approvals/decision/<%= expense._id %>"
+        class="btn-primary"
+      >
+        Make Approval Decision
+      </a>
+    </div>
+  <% } %>
+
+  <!-- Comments thread -->
+  <div class="section">
+    <h3>Comments</h3>
+
+    <% if (comments.length === 0) { %>
+      <p>No comments yet.</p>
+    <% } else { %>
+      <% comments.forEach(comment => { %>
+        <div class="comment-card">
+          <p class="comment-author">
+            <%= comment.userId?.name %>
+            <span class="comment-role">(<%= comment.userId?.role %>)</span>
+          </p>
+          <p><%= comment.text %></p>
+          <small><%= new Date(comment.timestamp).toLocaleString() %></small>
+        </div>
+      <% }) %>
+    <% } %>
+
+    <!-- Add a comment form — available to all roles -->
+    <form action="/comments" method="POST" class="comment-form">
+      <!-- Hidden field passes the expenseId to the comment controller -->
+      <input type="hidden" name="expenseId" value="<%= expense._id %>" />
+      <textarea
+        name="text"
+        rows="3"
+        placeholder="Add a comment..."
+        required
+      ></textarea>
+      <button type="submit" class="btn-primary">Post Comment</button>
+    </form>
+  </div>
+
+  <a href="/expenses" class="btn-secondary">← Back to Expenses</a>
+</div>
+
+<%- include('../partials/footer') %>
