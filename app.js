@@ -29,6 +29,7 @@ app.use("/approvals", require("./routes/approvalRoutes")); // approval workflow
 app.use("/audit-logs", require("./routes/auditLogRoutes")); // audit trail
 app.use("/reports", require("./routes/reportRoutes"));   // CSV reports
 app.use("/comments", require("./routes/commentRoutes")); // expense comments
+app.use("/budget", require("./routes/budgetRoutes"));
 
 // --- Dashboard redirect after login ---
 app.get("/dashboard", require("./middlewares/auth").protect, (req, res) => {

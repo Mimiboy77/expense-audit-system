@@ -80,3 +80,23 @@ Set the start command to: node server.js
 - Scheduling: node-cron
 - Logging: Winston
 - Reports: csv-writer
+EMPLOYEE
+  ↓ submits expense
+  ↓ ALL managers in their dept get email notification
+  ↓ can view own expenses only
+  ↓ receives email when decision is made
+
+MANAGER (one or two in same dept)
+  ↓ sees pending expenses < ₦50,000 from their dept only
+  ↓ cannot see expenses from other departments
+  ↓ cannot approve expenses >= ₦50,000
+  ↓ if two managers — both see the pending expense
+  ↓ whichever one acts first locks it — second sees it gone
+  ↓ if approved expense >= ₦50,000 — ALL finance users notified
+
+FINANCE (one or two)
+  ↓ sees all pending expenses >= ₦50,000 across all departments
+  ↓ cannot approve expenses < ₦50,000
+  ↓ if two finance users — both see the pending expense
+  ↓ whichever one acts first locks it — second sees it gone
+  ↓ employee notified of final decision

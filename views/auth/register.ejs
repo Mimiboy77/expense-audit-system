@@ -9,6 +9,7 @@
   <% } %>
 
   <form action="/register" method="POST">
+
     <div class="form-group">
       <label for="name">Full Name</label>
       <input
@@ -45,6 +46,7 @@
     <div class="form-group">
       <label for="role">Role</label>
       <select id="role" name="role" required>
+        <option value="">Select your role</option>
         <option value="employee">Employee</option>
         <option value="manager">Manager</option>
         <option value="finance">Finance</option>
@@ -52,16 +54,25 @@
     </div>
 
     <div class="form-group">
-  <label for="department">Department</label>
-  <select id="department" name="department" required>
-    <option value="">Select your department</option>
-    <% departments.forEach(dept => { %>
-      <option value="<%= dept._id %>">
-        <%= dept.name %>
-      </option>
-    <% }) %>
-  </select>
-</div>
+      <label for="department">Department</label>
+      <select id="department" name="department" required>
+        <option value="">Select your department</option>
+
+        <!-- Only loop if departments array exists and has items -->
+        <% if (departments && departments.length > 0) { %>
+          <% departments.forEach(dept => { %>
+            <option value="<%= dept._id %>">
+              <%= dept.name %> — Budget: ₦<%= dept.budget.toLocaleString() %>
+            </option>
+          <% }) %>
+        <% } else { %>
+          <option value="" disabled>
+            No departments available — contact your admin
+          </option>
+        <% } %>
+
+      </select>
+    </div>
 
     <button type="submit" class="btn-primary">Register</button>
   </form>

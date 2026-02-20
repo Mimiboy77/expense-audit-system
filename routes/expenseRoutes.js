@@ -1,48 +1,82 @@
 const express = require("express");
 const router = express.Router();
-
-// Controller functions
+const mongoose = require("mongoose");
+const Budget = require("../models/Budget");
+const Expense = require("../models/Expense");
 const {
   createExpense,
   getExpenses,
   getExpenseById,
   updateExpenseStatus
 } = require("../controllers/expenseController");
-
-// Middleware
 const { protect } = require("../middlewares/auth");
 const { restrictTo } = require("../middlewares/role");
 const { upload } = require("../middlewares/upload");
 
-// --- Page renders (GET) ---
+// GET /expenses/submit — render form with live budget info
+router.get("/submit", protect, async (req, res, next) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
 
-// Render the submit expense form — any logged-in user
-router.get(
-  "/submit",
-  protect,
-  (req, res) => res.render("expenses/submit-expense", {
-    error: null,
-    user: req.user
-  })
-);
+    const departmentId = req.user.department._id
+      ? req.user.department._id
+      : req.user.department;
 
-// List all expenses for the logged-in user
+    const deptObjectId = new mongoose.Types.ObjectId(departmentId);
+
+    // Fetch current month budget for this department
+    const budget = await Budget.findOne({
+      departmentId: deptObjectId,
+      month,
+      year
+    });
+
+    // Calculate how much has been spent so far
+    const spent = await Expense.aggregate([
+      {
+        $match: {
+          departmentId: deptObjectId,
+          month,
+          year,
+          status: { $in: ["approved", "paid"] }
+        }
+      },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+
+    const totalSpent = spent[0]?.total || 0;
+    const budgetAmount = budget ? budget.amount : 0;
+    const remaining = budgetAmount - totalSpent;
+
+    res.render("expenses/submit-expense", {
+      error: null,
+      user: req.user,
+      budgetAmount,
+      totalSpent,
+      remaining
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /expenses — list all expenses for logged in user
 router.get("/", protect, getExpenses);
 
-// View a single expense with comments and approvals
+// GET /expenses/:id — view single expense
 router.get("/:id", protect, getExpenseById);
 
-// --- Form submissions and updates ---
-
-// Submit a new expense — upload runs first to handle receipt file
+// POST /expenses — submit new expense
 router.post(
   "/",
   protect,
-  upload.single("receipt"), // "receipt" matches the input name in the EJS form
+  upload.single("receipt"),
   createExpense
 );
 
-// Update expense status — only manager or finance can do this
+// PUT /expenses/:id — update expense status
 router.put(
   "/:id",
   protect,

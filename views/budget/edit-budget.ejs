@@ -1,0 +1,92 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Edit Budget — <%= department.name %></h2>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <div class="detail-card">
+
+    <!-- Current budget info -->
+    <div style="margin-bottom:24px;">
+      <p>
+        <strong>Department:</strong> <%= department.name %>
+      </p>
+      <p>
+        <strong>Current Default Budget:</strong>
+        ₦<%= department.budget.toLocaleString() %>
+      </p>
+      <p>
+        <strong>Current Budget for <%= month %>/<%= year %>:</strong>
+        <%= budget
+          ? '₦' + budget.amount.toLocaleString()
+          : 'Not set' %>
+      </p>
+    </div>
+
+    <form action="/budget/edit/<%= department._id %>"
+      method="POST">
+
+      <div class="form-group">
+        <label for="month">Month</label>
+        <select id="month" name="month" required>
+          <% const monthNames = [
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ];
+          monthNames.forEach((m, i) => { %>
+            <option value="<%= i + 1 %>"
+              <%= i + 1 === month ? 'selected' : '' %>>
+              <%= m %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="year">Year</label>
+        <input
+          type="number"
+          id="year"
+          name="year"
+          value="<%= year %>"
+          min="2020"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amount">
+          New Budget Amount (₦)
+        </label>
+        <input
+          type="number"
+          id="amount"
+          name="amount"
+          value="<%= budget ? budget.amount : department.budget %>"
+          min="1"
+          required
+        />
+        <small style="color:#999; font-size:0.8rem;">
+          This updates the budget for the selected month only.
+          The default budget for future months is also updated.
+        </small>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        Save Budget
+      </button>
+    </form>
+  </div>
+
+  <a href="/budget" class="btn-secondary">← Back to Budgets</a>
+</div>
+
+<%- include('../partials/footer') %>

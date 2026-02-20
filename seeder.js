@@ -12,36 +12,59 @@ const departments = [
   { name: "Operations", budget: 400000 }
 ];
 
-const seedDepartments = async () => {
+const seed = async () => {
   try {
     await connectDB();
 
-    // Clear existing departments and budgets
-    await Department.deleteMany();
-    await Budget.deleteMany();
-
-    // Insert fresh departments
-    const created = await Department.insertMany(departments);
-
-    // Create a budget for each department for the current month
     const now = new Date();
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
-    for (const dept of created) {
-      await Budget.create({
-        departmentId: dept._id,
-        month,
-        year,
-        amount: dept.budget
-      });
+    console.log(`Seeding for month: ${month}/${year}`);
+
+    // Check if departments already exist
+    const existingDepts = await Department.find();
+
+    let deptList = existingDepts;
+
+    // Only create departments if none exist
+    if (existingDepts.length === 0) {
+      console.log("No departments found — creating fresh ones");
+      await Department.deleteMany();
+      await Budget.deleteMany();
+      deptList = await Department.insertMany(departments);
+      console.log("Departments created");
+    } else {
+      console.log(`Found ${existingDepts.length} existing departments — keeping them`);
     }
 
-    console.log("Departments and budgets seeded successfully");
-    console.log("--- Copy one of these Department IDs into your register form ---");
+    // Create budgets for current month if they do not exist yet
+    for (const dept of deptList) {
+      const existing = await Budget.findOne({
+        departmentId: dept._id,
+        month,
+        year
+      });
 
-    // Print each department with its ID so you can copy it
-    created.forEach(dept => {
+      if (!existing) {
+        await Budget.create({
+          departmentId: dept._id,
+          month,
+          year,
+          amount: dept.budget
+        });
+        console.log(
+          `Budget created: ${dept.name} — ₦${dept.budget.toLocaleString()} for ${month}/${year}`
+        );
+      } else {
+        console.log(
+          `Budget already exists: ${dept.name} for ${month}/${year} — skipped`
+        );
+      }
+    }
+
+    console.log("\n--- Department IDs for registration ---");
+    deptList.forEach(dept => {
       console.log(`${dept.name}: ${dept._id}`);
     });
 
@@ -52,4 +75,4 @@ const seedDepartments = async () => {
   }
 };
 
-seedDepartments();
+seed();

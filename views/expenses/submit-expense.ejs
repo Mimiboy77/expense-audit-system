@@ -4,75 +4,140 @@
 <div class="page-container">
   <h2>Submit New Expense</h2>
 
-  <!-- Show error if submission fails e.g budget exceeded -->
+  <!-- Live budget info so employee knows how much is left -->
+  <% if (budgetAmount > 0) { %>
+    <div class="budget-info-bar">
+      <div class="budget-info-item">
+        <span class="budget-info-label">Monthly Budget</span>
+        <span class="budget-info-value">
+          ₦<%= budgetAmount.toLocaleString() %>
+        </span>
+      </div>
+      <div class="budget-info-item">
+        <span class="budget-info-label">Spent So Far</span>
+        <span class="budget-info-value spent">
+          ₦<%= totalSpent.toLocaleString() %>
+        </span>
+      </div>
+      <div class="budget-info-item">
+        <span class="budget-info-label">Remaining</span>
+        <span class="budget-info-value
+          <%= remaining <= 0 ? 'exceeded' : remaining < budgetAmount * 0.25 ? 'low' : 'safe' %>">
+          ₦<%= remaining.toLocaleString() %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Block form if budget is fully exhausted -->
+    <% if (remaining <= 0) { %>
+      <div class="alert alert-error">
+        Your department budget for this month has been fully used.
+        You cannot submit new expenses until next month or until
+        your manager increases the budget.
+      </div>
+    <% } %>
+  <% } else { %>
+    <div class="alert alert-error">
+      No budget has been set for your department this month.
+      Contact your administrator.
+    </div>
+  <% } %>
+
+  <!-- Show error from controller if submission fails -->
   <% if (error) { %>
     <div class="alert alert-error"><%= error %></div>
   <% } %>
 
-  <!-- enctype must be multipart/form-data for file uploads to work -->
-  <form action="/expenses" method="POST" enctype="multipart/form-data">
+  <!-- Only show the form if there is remaining budget -->
+  <% if (remaining > 0 || budgetAmount === 0) { %>
+    <form
+      action="/expenses"
+      method="POST"
+      enctype="multipart/form-data"
+    >
 
-    <div class="form-group">
-      <label for="category">Category</label>
-      <input
-        type="text"
-        id="category"
-        name="category"
-        placeholder="e.g. Travel, Supplies, Utilities"
-        required
-      />
-    </div>
+      <div class="form-group">
+        <label for="category">Category</label>
+        <input
+          type="text"
+          id="category"
+          name="category"
+          placeholder="e.g. Travel, Supplies, Utilities"
+          required
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="amount">Amount (₦)</label>
-      <input
-        type="number"
-        id="amount"
-        name="amount"
-        placeholder="Enter amount in Naira"
-        min="1"
-        required
-      />
-    </div>
+      <div class="form-group">
+        <label for="amount">
+          Amount (₦)
+          <% if (remaining > 0) { %>
+            <span style="color:#999; font-weight:400;">
+              — Max available: ₦<%= remaining.toLocaleString() %>
+            </span>
+          <% } %>
+        </label>
+        <input
+          type="number"
+          id="amount"
+          name="amount"
+          placeholder="Enter amount in Naira"
+          min="1"
+          max="<%= remaining > 0 ? remaining : '' %>"
+          required
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="month">Month</label>
-      <select id="month" name="month" required>
-        <option value="">Select month</option>
-        <% const months = [
-          "January","February","March","April","May","June",
-          "July","August","September","October","November","December"
-        ];
-        months.forEach((m, i) => { %>
-          <option value="<%= i + 1 %>"><%= m %></option>
-        <% }) %>
-      </select>
-    </div>
+      <div class="form-group">
+        <label for="month">Month</label>
+        <select id="month" name="month" required>
+          <option value="">Select month</option>
+          <%
+            const months = [
+              "January","February","March","April",
+              "May","June","July","August",
+              "September","October","November","December"
+            ];
+            months.forEach((m, i) => {
+          %>
+            <option
+              value="<%= i + 1 %>"
+              <%= i + 1 === new Date().getMonth() + 1 ? 'selected' : '' %>
+            >
+              <%= m %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="year">Year</label>
-      <input
-        type="number"
-        id="year"
-        name="year"
-        value="<%= new Date().getFullYear() %>"
-        min="2020"
-        required
-      />
-    </div>
+      <div class="form-group">
+        <label for="year">Year</label>
+        <input
+          type="number"
+          id="year"
+          name="year"
+          value="<%= new Date().getFullYear() %>"
+          min="2020"
+          required
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="receipt">Receipt (JPEG, PNG or PDF — max 5MB)</label>
-      <input
-        type="file"
-        id="receipt"
-        name="receipt"
-        accept=".jpg,.jpeg,.png,.pdf"
-      />
-    </div>
+      <div class="form-group">
+        <label for="receipt">
+          Receipt (JPEG, PNG or PDF — max 5MB)
+        </label>
+        <input
+          type="file"
+          id="receipt"
+          name="receipt"
+          accept=".jpg,.jpeg,.png,.pdf"
+        />
+      </div>
 
-    <button type="submit" class="btn-primary">Submit Expense</button>
-  </form>
+      <button type="submit" class="btn-primary">
+        Submit Expense
+      </button>
+    </form>
+  <% } %>
 
   <a href="/expenses" class="btn-secondary">← Cancel</a>
 </div>

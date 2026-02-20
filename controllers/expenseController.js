@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
 const AuditLog = require("../models/AuditLog");
 const Budget = require("../models/Budget");
@@ -11,30 +12,35 @@ const createExpense = async (req, res, next) => {
   try {
     const { amount, category, month, year } = req.body;
 
-    // Convert department ObjectId to string safely
+    // Safely extract department ObjectId whether it is
+    // a plain ObjectId or a populated object
     const departmentId = req.user.department._id
       ? req.user.department._id
       : req.user.department;
 
-    // Check if a budget exists for this department this month
+    // Convert to proper Mongoose ObjectId for reliable querying
+    const deptObjectId = new mongoose.Types.ObjectId(departmentId);
+
+    // Check budget exists for this department this month
     const budget = await Budget.findOne({
-      departmentId,
+      departmentId: deptObjectId,
       month: Number(month),
       year: Number(year)
     });
 
+    // If no budget exists still allow submission
+    // but warn the user — do not block them entirely
     if (!budget) {
-      return res.status(400).render("expenses/submit-expense", {
-        error: "No budget set for your department this month",
-        user: req.user
-      });
+      console.log(
+        `No budget found for department ${departmentId} — ${month}/${year}`
+      );
     }
 
-    // Calculate total already spent by this department this month
+    // Calculate total already approved or paid this month
     const spent = await Expense.aggregate([
       {
         $match: {
-          departmentId: departmentId,
+          departmentId: deptObjectId,
           month: Number(month),
           year: Number(year),
           status: { $in: ["approved", "paid"] }
@@ -47,21 +53,21 @@ const createExpense = async (req, res, next) => {
 
     const totalSpent = spent[0]?.total || 0;
 
-    // Block if this expense would push department over budget
-    if (totalSpent + Number(amount) > budget.amount) {
+    // Only block if a budget exists AND this expense exceeds it
+    if (budget && totalSpent + Number(amount) > budget.amount) {
       return res.status(400).render("expenses/submit-expense", {
-        error: "This expense exceeds your department budget for this month",
+        error: `This expense of ₦${Number(amount).toLocaleString()} exceeds your department budget. Total spent this month: ₦${totalSpent.toLocaleString()} of ₦${budget.amount.toLocaleString()}`,
         user: req.user
       });
     }
 
-   
-// Cloudinary returns a secure URL directly — no path manipulation needed
-const receipt = req.file ? req.file.path : null;
-    // Create the expense record
+    // Save receipt URL from Cloudinary or null if no file
+    const receipt = req.file ? req.file.path : null;
+
+    // Create the expense
     const expense = await Expense.create({
       userId: req.user._id,
-      departmentId,
+      departmentId: deptObjectId,
       amount: Number(amount),
       category,
       receipt,
@@ -69,20 +75,20 @@ const receipt = req.file ? req.file.path : null;
       year: Number(year)
     });
 
-    // Write an audit log entry for this creation
+    // Write audit log
     await AuditLog.create({
       expenseId: expense._id,
       performedBy: req.user._id,
       action: "created"
     });
 
-    // Find the manager in the same department and notify them
-    const manager = await User.findOne({
-      department: departmentId,
+    // Notify ALL managers in this department
+    const managers = await User.find({
+      department: deptObjectId,
       role: "manager"
     });
 
-    if (manager) {
+    for (const manager of managers) {
       await sendMail(
         manager.email,
         "New Expense Submitted for Approval",
@@ -100,7 +106,7 @@ const receipt = req.file ? req.file.path : null;
   }
 };
 
-// GET /expenses — returns all expenses for the logged-in user
+// GET /expenses — returns all expenses for logged-in user
 const getExpenses = async (req, res, next) => {
   try {
     const expenses = await Expense.find({ userId: req.user._id })
@@ -113,12 +119,13 @@ const getExpenses = async (req, res, next) => {
   }
 };
 
-// GET /expenses/:id — returns one expense with comments and approvals
+// GET /expenses/:id — single expense with comments and approvals
+// GET /expenses/:id — single expense with comments and approvals
 const getExpenseById = async (req, res, next) => {
   try {
     const expense = await Expense.findById(req.params.id)
       .populate("userId", "name email")
-      .populate("departmentId", "name");
+      .populate("departmentId", "name budget"); // Added budget to populate
 
     if (!expense) {
       return res.status(404).render("error", {
@@ -127,7 +134,9 @@ const getExpenseById = async (req, res, next) => {
       });
     }
 
-    // Fetch related comments and approvals
+    // Debug — temporarily log what department looks like
+    console.log("Expense department:", expense.departmentId);
+
     const comments = await Comment.find({ expenseId: expense._id })
       .populate("userId", "name role");
 
@@ -161,7 +170,6 @@ const updateExpenseStatus = async (req, res, next) => {
     expense.status = status;
     await expense.save();
 
-    // Log who changed the status and what it changed to
     await AuditLog.create({
       expenseId: expense._id,
       performedBy: req.user._id,

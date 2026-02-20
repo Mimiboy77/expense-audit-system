@@ -1,0 +1,254 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+
+  <% if (role === "finance") { %>
+
+    
+    <!-- FINANCE VIEW — ALL DEPARTMENTS   -->
+   
+
+    <div class="page-header">
+      <h2>All Department Budgets</h2>
+      <span class="budget-period">
+        Period: <strong><%= month %>/<%= year %></strong>
+      </span>
+    </div>
+
+    <!-- Show success message from budget reset -->
+    <% const successMsg = new URLSearchParams(
+        typeof window === 'undefined' ? '' : window.location.search
+       ).get('success');
+    %>
+
+    <!-- Manual budget reset form for finance -->
+    <div class="detail-card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:16px;">Manual Budget Reset</h3>
+      <p style="color:#777; font-size:0.88rem; margin-bottom:16px;">
+        Use this to create budgets for a specific month if the
+        automatic cron job has not run yet.
+      </p>
+      <form action="/budget/reset" method="POST"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+
+        <div class="form-group" style="margin:0; flex:1; min-width:140px;">
+          <label>Month</label>
+          <select name="month" required>
+            <% const monthNames = [
+              "January","February","March","April","May","June",
+              "July","August","September","October","November","December"
+            ];
+            monthNames.forEach((m, i) => { %>
+              <option value="<%= i + 1 %>"
+                <%= i + 1 === month ? 'selected' : '' %>>
+                <%= m %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin:0; flex:1; min-width:100px;">
+          <label>Year</label>
+          <input
+            type="number"
+            name="year"
+            value="<%= year %>"
+            min="2020"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Reset Budgets for Month
+        </button>
+      </form>
+    </div>
+
+    <!-- Summary table for all departments -->
+    <% if (summaries.length === 0) { %>
+      <p class="empty-state">No departments found.</p>
+    <% } else { %>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Department</th>
+            <th>Budget (₦)</th>
+            <th>Spent (₦)</th>
+            <th>Remaining (₦)</th>
+            <th>Usage</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% summaries.forEach(s => { %>
+            <tr>
+              <td><%= s.department.name %></td>
+              <td>₦<%= s.budgetAmount.toLocaleString() %></td>
+              <td>₦<%= s.totalSpent.toLocaleString() %></td>
+
+              <!-- Red if exceeded green if fine -->
+              <td style="color: <%= s.remaining < 0 ? '#b71c1c' : '#2e7d32' %>; font-weight:600;">
+                ₦<%= s.remaining.toLocaleString() %>
+              </td>
+
+              <!-- Mini progress bar inside table -->
+              <td style="min-width:120px;">
+                <div class="budget-progress-bar"
+                  style="height:10px; margin:0;">
+                  <div class="budget-progress-fill
+                    <%= s.percentageUsed >= 100
+                      ? 'fill-danger'
+                      : s.percentageUsed >= 75
+                      ? 'fill-warning'
+                      : 'fill-safe' %>"
+                    style="width:<%= s.percentageUsed %>%">
+                  </div>
+                </div>
+                <small style="color:#999;">
+                  <%= s.percentageUsed %>% used
+                </small>
+              </td>
+
+              <td>
+                
+                <a href="/budget/edit/<%= s.department._id %>"
+                  class="btn-small"
+                >
+                  Edit Budget
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+
+  <% } else { %>
+
+  
+    <!-- MANAGER VIEW — OWN DEPARTMENT   -->
+  
+
+    <div class="page-header">
+      <h2>
+        Department Budget
+        <% if (departmentName) { %>
+          — <%= departmentName %>
+        <% } %>
+      </h2>
+      <span class="budget-period">
+        Period: <strong><%= month %>/<%= year %></strong>
+      </span>
+    </div>
+
+    <% if (budgetError) { %>
+      <div class="alert alert-error"><%= budgetError %></div>
+    <% } else { %>
+
+      <!-- Budget summary cards -->
+      <div class="budget-cards">
+        <div class="budget-card budget-total">
+          <p class="budget-card-label">Total Budget</p>
+          <p class="budget-card-value">
+            ₦<%= budgetAmount.toLocaleString() %>
+          </p>
+        </div>
+
+        <div class="budget-card budget-spent">
+          <p class="budget-card-label">Spent</p>
+          <p class="budget-card-value">
+            ₦<%= totalSpent.toLocaleString() %>
+          </p>
+        </div>
+
+        <div class="budget-card budget-pending">
+          <p class="budget-card-label">Pending Approval</p>
+          <p class="budget-card-value">
+            ₦<%= totalPending.toLocaleString() %>
+          </p>
+        </div>
+
+        <div class="budget-card
+          <%= remaining < 0 ? 'budget-exceeded' : 'budget-remaining' %>">
+          <p class="budget-card-label">Remaining</p>
+          <p class="budget-card-value">
+            ₦<%= remaining.toLocaleString() %>
+          </p>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="budget-progress-wrapper">
+        <div class="budget-progress-header">
+          <span>Budget Used</span>
+          <span><%= percentageUsed %>%</span>
+        </div>
+        <div class="budget-progress-bar">
+          <div
+            class="budget-progress-fill
+              <%= percentageUsed >= 100
+                ? 'fill-danger'
+                : percentageUsed >= 75
+                ? 'fill-warning'
+                : 'fill-safe' %>"
+            style="width: <%= percentageUsed %>%"
+          ></div>
+        </div>
+
+        <% if (percentageUsed >= 100) { %>
+          <p class="budget-warning danger">
+            ⚠ Budget fully exhausted. Contact Finance to
+            increase your department budget.
+          </p>
+        <% } else if (percentageUsed >= 75) { %>
+          <p class="budget-warning caution">
+            ⚠ Over 75% of budget used. Approaching limit.
+          </p>
+        <% } %>
+      </div>
+
+    <% } %>
+
+    <!-- All expenses this month -->
+    <div class="section">
+      <h3>All Expenses This Month</h3>
+      <% if (expenses.length === 0) { %>
+        <p class="empty-state">No expenses submitted this month.</p>
+      <% } else { %>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Category</th>
+              <th>Amount (₦)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% expenses.forEach(expense => { %>
+              <tr>
+                <td><%= expense.userId?.name || "Unknown" %></td>
+                <td><%= expense.category %></td>
+                <td>₦<%= expense.amount.toLocaleString() %></td>
+                <td>
+                  <span class="status-badge status-<%= expense.status %>">
+                    <%= expense.status %>
+                  </span>
+                </td>
+                <td>
+                  <a href="/expenses/<%= expense._id %>"
+                    class="btn-small">View</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>
