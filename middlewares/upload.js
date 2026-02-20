@@ -1,37 +1,28 @@
 const multer = require("multer");
-const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Save files into public/uploads
-    cb(null, "public/uploads/");
-  },
+// Configure Cloudinary with credentials from .env
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-  filename: (req, file, cb) => {
-    // Prefix with timestamp to avoid name collisions
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
+// Tell Multer to store files in Cloudinary instead of local disk
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "expense-audit/receipts", // Folder name inside your Cloudinary account
+    allowed_formats: ["jpg", "jpeg", "png", "pdf"], // Accepted file types
+    resource_type: "auto" // Handles both images and PDFs automatically
   }
 });
 
-// Only accept images and PDFs
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|pdf/;
-  const isValid = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
-
-  if (isValid) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only JPEG, PNG, and PDF files are allowed"), false);
-  }
-};
-
+// File size limit of 5MB
 const upload = multer({
   storage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB cap
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 module.exports = { upload };

@@ -55,12 +55,9 @@ const createExpense = async (req, res, next) => {
       });
     }
 
-    // Normalize the path to use forward slashes and remove the public/ prefix
-// so it works correctly as a browser URL
-const receipt = req.file
-  ? req.file.path.replace(/\\/g, "/").replace("public/", "")
-  : null;
-
+   
+// Cloudinary returns a secure URL directly — no path manipulation needed
+const receipt = req.file ? req.file.path : null;
     // Create the expense record
     const expense = await Expense.create({
       userId: req.user._id,

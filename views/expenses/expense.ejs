@@ -21,9 +21,7 @@
     <% if (expense.receipt) { %>
       <p>
         <strong>Receipt:</strong>
-        <a href="/<%= expense.receipt.replace(/\\/g, '/').replace('public/', '') %>" target="_blank">
-  View Receipt
-</a>
+        <a href="<%= expense.receipt %>" target="_blank">View Receipt</a>
       </p>
     <% } %>
   </div>
@@ -55,9 +53,8 @@
   <% if (user.role === "manager" || user.role === "finance") { %>
     <div class="section">
       
-        href="/approvals/decision/<%= expense._id %>"
-        class="btn-primary"
-      >
+        <a href="/approvals/decision/<%= expense._id %>"
+        class="btn-primary">
         Make Approval Decision
       </a>
     </div>
