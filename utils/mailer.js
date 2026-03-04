@@ -1,23 +1,27 @@
 const nodemailer = require("nodemailer");
 const logger = require("./logger");
 
-// Mailtrap SMTP transporter for development email testing
+// Gmail SMTP transporter using App Password
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,       // sandbox.smtp.mailtrap.io
-  port: process.env.EMAIL_PORT,       // 2525
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: false,  // false for port 587 — uses STARTTLS
   auth: {
-    user: process.env.EMAIL_USER,     // Mailtrap username
-    pass: process.env.EMAIL_PASS      // Mailtrap password
+    user: process.env.EMAIL_USER,   // Your Gmail address
+    pass: process.env.EMAIL_PASS    // Your 16 character App Password
+  },
+  tls: {
+    rejectUnauthorized: false       // Prevents TLS errors in development
   }
 });
 
-// Verify connection when server starts
-// You will see "Mailer is ready" in terminal if credentials are correct
+// Verify connection on server start
+// Terminal will confirm if Gmail accepted the credentials
 transporter.verify((error, success) => {
   if (error) {
     logger.error(`Mailer connection failed: ${error.message}`);
   } else {
-    logger.info("Mailer is ready to send emails");
+    logger.info("Mailer is ready — Gmail SMTP connected successfully");
   }
 });
 
