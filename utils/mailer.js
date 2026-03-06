@@ -9,7 +9,7 @@ dns.setDefaultResultOrder("ipv4first");
 // Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
+  port: 465,
   secure: false,
   family: 4,                    // Force IPv4 connection
   auth: {
