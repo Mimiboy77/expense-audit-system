@@ -1,27 +1,15 @@
 const nodemailer = require("nodemailer");
 const logger = require("./logger");
-const dns = require("dns");
 
-// Force Node.js to resolve DNS using IPv4 only
-// This prevents the ENETUNREACH IPv6 error on Windows
-dns.setDefaultResultOrder("ipv4first");
-
-// Gmail SMTP transporter
+// Uses service:'gmail' exactly like your working project
+// This lets Nodemailer handle all Gmail config internally
+// and avoids the IPv6 ENETUNREACH error completely
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: false,
-  family: 4,                    // Force IPv4 connection
+  service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 15000,     // 15 seconds to connect
-  greetingTimeout: 15000,       // 15 seconds for greeting
-  socketTimeout: 20000          // 20 seconds for socket
+    user: process.env.GMAIL_USER,   // Your Gmail address
+    pass: process.env.GMAIL_PASS    // Your 16 character App Password
+  }
 });
 
 // Verify connection when server starts
@@ -29,7 +17,7 @@ transporter.verify((error, success) => {
   if (error) {
     logger.error(`Mailer connection failed: ${error.message}`);
   } else {
-    logger.info("Mailer is ready — Gmail SMTP connected successfully");
+    logger.info("Mailer is ready — Gmail connected successfully");
   }
 });
 
@@ -41,15 +29,16 @@ transporter.verify((error, success) => {
  */
 const sendMail = async (to, subject, html) => {
   try {
-    await transporter.sendMail({
-      from: `"ExpenseAudit System" <${process.env.EMAIL_USER}>`,
+    const info = await transporter.sendMail({
+      from: `"ExpenseAudit System" <${process.env.GMAIL_USER}>`,
       to,
       subject,
       html
     });
 
-    logger.info(`Email sent to ${to} — Subject: ${subject}`);
+    logger.info(`Email sent to ${to} — MessageID: ${info.messageId}`);
   } catch (error) {
+    // Log failure but never crash the app
     logger.error(`Failed to send email to ${to} — ${error.message}`);
   }
 };
