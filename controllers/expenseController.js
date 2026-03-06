@@ -6,19 +6,29 @@ const Comment = require("../models/Comment");
 const Approval = require("../models/Approval");
 const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
+const logger = require("../utils/logger");
 
 // POST /expenses — employee submits a new expense
 const createExpense = async (req, res, next) => {
   try {
     const { amount, category, month, year } = req.body;
 
-    // Safely extract department ObjectId whether it is
-    // a plain ObjectId or a populated object
+    // Confirm department exists on the user object
+    if (!req.user.department) {
+      return res.status(400).render("expenses/submit-expense", {
+        error: "Your account has no department assigned. Contact your admin.",
+        user: req.user,
+        budgetAmount: 0,
+        totalSpent: 0,
+        remaining: 0
+      });
+    }
+
+    // Safely extract department ObjectId
     const departmentId = req.user.department._id
       ? req.user.department._id
       : req.user.department;
 
-    // Convert to proper Mongoose ObjectId for reliable querying
     const deptObjectId = new mongoose.Types.ObjectId(departmentId);
 
     // Check budget exists for this department this month
@@ -28,15 +38,7 @@ const createExpense = async (req, res, next) => {
       year: Number(year)
     });
 
-    // If no budget exists still allow submission
-    // but warn the user — do not block them entirely
-    if (!budget) {
-      console.log(
-        `No budget found for department ${departmentId} — ${month}/${year}`
-      );
-    }
-
-    // Calculate total already approved or paid this month
+    // Calculate total already spent this month
     const spent = await Expense.aggregate([
       {
         $match: {
@@ -46,25 +48,26 @@ const createExpense = async (req, res, next) => {
           status: { $in: ["approved", "paid"] }
         }
       },
-      {
-        $group: { _id: null, total: { $sum: "$amount" } }
-      }
+      { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
 
     const totalSpent = spent[0]?.total || 0;
 
-    // Only block if a budget exists AND this expense exceeds it
+    // Block if expense would exceed budget
     if (budget && totalSpent + Number(amount) > budget.amount) {
       return res.status(400).render("expenses/submit-expense", {
-        error: `This expense of ₦${Number(amount).toLocaleString()} exceeds your department budget. Total spent this month: ₦${totalSpent.toLocaleString()} of ₦${budget.amount.toLocaleString()}`,
-        user: req.user
+        error: `This expense of ₦${Number(amount).toLocaleString()} exceeds your department budget. Total spent: ₦${totalSpent.toLocaleString()} of ₦${budget.amount.toLocaleString()}`,
+        user: req.user,
+        budgetAmount: budget.amount,
+        totalSpent,
+        remaining: budget.amount - totalSpent
       });
     }
 
-    // Save receipt URL from Cloudinary or null if no file
+    // Save receipt URL from Cloudinary or null
     const receipt = req.file ? req.file.path : null;
 
-    // Create the expense
+    // Create the expense record first — this must always succeed
     const expense = await Expense.create({
       userId: req.user._id,
       departmentId: deptObjectId,
@@ -82,24 +85,32 @@ const createExpense = async (req, res, next) => {
       action: "created"
     });
 
-    // Notify ALL managers in this department
-    const managers = await User.find({
-      department: deptObjectId,
-      role: "manager"
+    // Send email notifications asynchronously
+    // This runs AFTER the response so it never blocks submission
+    setImmediate(async () => {
+      try {
+        const managers = await User.find({
+          department: deptObjectId,
+          role: "manager"
+        });
+
+        for (const manager of managers) {
+          await sendMail(
+            manager.email,
+            "New Expense Submitted for Approval",
+            `<p>Hi ${manager.name},</p>
+             <p>A new expense of <strong>₦${Number(amount).toLocaleString()}</strong>
+             in the <strong>${category}</strong> category
+             has been submitted and requires your approval.</p>
+             <p>Please log in to review it.</p>`
+          );
+        }
+      } catch (emailError) {
+        logger.error(`Expense email failed: ${emailError.message}`);
+      }
     });
 
-    for (const manager of managers) {
-      await sendMail(
-        manager.email,
-        "New Expense Submitted for Approval",
-        `<p>Hi ${manager.name},</p>
-         <p>A new expense of <strong>₦${Number(amount).toLocaleString()}</strong>
-         in the <strong>${category}</strong> category
-         has been submitted and requires your approval.</p>
-         <p>Please log in to review it.</p>`
-      );
-    }
-
+    // Redirect immediately — do not wait for email
     res.redirect("/expenses");
   } catch (error) {
     next(error);

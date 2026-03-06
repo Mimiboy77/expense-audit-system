@@ -4,6 +4,7 @@ const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const { sendMail } = require("../utils/mailer");
+const logger = require("../utils/logger"); // Added logger import
 
 // POST /approvals — manager or finance submits a decision
 const createApproval = async (req, res, next) => {
@@ -89,46 +90,56 @@ const createApproval = async (req, res, next) => {
       action: decision
     });
 
-    // Notify the employee who submitted the expense
-    const employee = await User.findById(expense.userId);
-    if (employee) {
-      await sendMail(
-        employee.email,
-        `Your Expense Has Been ${
-          decision.charAt(0).toUpperCase() + decision.slice(1)
-        }`,
-        `<p>Hi ${employee.name},</p>
-         <p>Your expense of <strong>₦${expense.amount.toLocaleString()}</strong>
-         in the <strong>${expense.category}</strong> category
-         has been <strong>${decision}</strong> by
-         ${req.user.name} (${req.user.role}).</p>
-         <p>Log in to view the full details.</p>`
-      );
-    }
+    // Send emails asynchronously so they never block
+    // or crash the approval if Gmail is down or slow
+    setImmediate(async () => {
+      try {
+        // Notify the employee who submitted the expense
+        const employee = await User.findById(expense.userId);
+        if (employee) {
+          await sendMail(
+            employee.email,
+            `Your Expense Has Been ${
+              decision.charAt(0).toUpperCase() + decision.slice(1)
+            }`,
+            `<p>Hi ${employee.name},</p>
+             <p>Your expense of <strong>₦${expense.amount.toLocaleString()}</strong>
+             in the <strong>${expense.category}</strong> category
+             has been <strong>${decision}</strong> by
+             ${req.user.name} (${req.user.role}).</p>
+             <p>Log in to view the full details.</p>`
+          );
+        }
 
-    // If manager approved a large expense notify ALL finance users
-    if (
-      req.user.role === "manager" &&
-      expense.amount >= 50000 &&
-      decision === "approved"
-    ) {
-      const financeUsers = await User.find({ role: "finance" });
+        // If manager approved a large expense notify ALL finance users
+        if (
+          req.user.role === "manager" &&
+          expense.amount >= 50000 &&
+          decision === "approved"
+        ) {
+          const financeUsers = await User.find({ role: "finance" });
 
-      for (const finance of financeUsers) {
-        await sendMail(
-          finance.email,
-          "Large Expense Awaiting Your Finance Approval",
-          `<p>Hi ${finance.name},</p>
-           <p>An expense of <strong>₦${expense.amount.toLocaleString()}</strong>
-           in the <strong>${expense.category}</strong> category
-           from the <strong>${expense.departmentId?.name}</strong> department
-           has been approved by a manager and now requires
-           your finance approval.</p>
-           <p>Please log in to review it.</p>`
-        );
+          for (const finance of financeUsers) {
+            await sendMail(
+              finance.email,
+              "Large Expense Awaiting Your Finance Approval",
+              `<p>Hi ${finance.name},</p>
+               <p>An expense of <strong>₦${expense.amount.toLocaleString()}</strong>
+               in the <strong>${expense.category}</strong> category
+               from the <strong>${expense.departmentId?.name}</strong> department
+               has been approved by a manager and now requires
+               your finance approval.</p>
+               <p>Please log in to review it.</p>`
+            );
+          }
+        }
+      } catch (emailError) {
+        // Only log the failure — never affect the approval
+        logger.error(`Approval email failed: ${emailError.message}`);
       }
-    }
+    });
 
+    // Redirect immediately without waiting for emails
     res.redirect("/approvals");
   } catch (error) {
     next(error);
