@@ -91,6 +91,9 @@ const updateProfile = async (req, res, next) => {
     }
 
     await user.save();
+    // Fetch updated user with department populated
+    const updatedUser = await User.findById(user._id)
+      .populate("department", "name");
 
     res.render("profile", {
       user,
