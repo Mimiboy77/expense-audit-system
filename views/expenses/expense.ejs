@@ -49,16 +49,68 @@
     <% } %>
   </div>
 
-  <!-- Manager or finance can make a decision from here -->
-  <% if (user.role === "manager" || user.role === "finance") { %>
-    <div class="section">
-      
-        <a href="/approvals/decision/<%= expense._id %>"
-        class="btn-primary">
-        Make Approval Decision
-      </a>
+  <!-- Manager or finance can take action from here -->
+<% if (user.role === "manager" || user.role === "finance") { %>
+  <div class="section">
+    <h3>Take Action</h3>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+
+      <!-- Link to full approval decision form -->
+      <% if (expense.status === "submitted") { %>
+        
+          href="/approvals/decision/<%= expense._id %>"
+          class="btn-primary"
+        >
+          Make Approval Decision
+        </a>
+      <% } %>
+
+      <!-- Finance can mark an approved expense as paid -->
+      <% if (
+        user.role === "finance" &&
+        expense.status === "approved"
+      ) { %>
+        <form
+          action="/expenses/<%= expense._id %>?_method=PUT"
+          method="POST"
+          onsubmit="return confirm('Mark this expense as paid?')"
+        >
+          <input type="hidden" name="status" value="paid" />
+          <button type="submit" class="btn-primary"
+            style="background:#1565c0;">
+            Mark as Paid
+          </button>
+        </form>
+      <% } %>
+
+      <!-- Finance can reopen a rejected expense -->
+      <% if (
+        user.role === "finance" &&
+        expense.status === "rejected"
+      ) { %>
+        <form
+          action="/expenses/<%= expense._id %>?_method=PUT"
+          method="POST"
+          onsubmit="return confirm('Reopen this expense for resubmission?')"
+        >
+          <input type="hidden" name="status" value="submitted" />
+          <button type="submit" class="btn-secondary">
+            Reopen for Review
+          </button>
+        </form>
+      <% } %>
+
     </div>
-  <% } %>
+
+    <!-- Show what action is available based on status -->
+    <% if (expense.status === "paid") { %>
+      <p style="color:#2e7d32; font-size:0.88rem; margin-top:12px;">
+        ✅ This expense has been paid. No further action needed.
+      </p>
+    <% } %>
+  </div>
+<% } %>
 
   <!-- Comments thread -->
   <div class="section">

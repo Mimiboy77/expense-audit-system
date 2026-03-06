@@ -197,11 +197,42 @@ const updateExpenseStatus = async (req, res, next) => {
     expense.status = status;
     await expense.save();
 
+    // Write audit log
     await AuditLog.create({
       expenseId: expense._id,
       performedBy: req.user._id,
       action: status
     });
+
+    // Notify the employee when their expense is marked paid
+    if (status === "paid") {
+      await Notification.create({
+        userId: expense.userId,
+        expenseId: expense._id,
+        message: `Your expense of ₦${expense.amount.toLocaleString()} in ${expense.category} has been marked as paid`,
+        type: "paid"
+      });
+
+      // Also send email in background
+      setImmediate(async () => {
+        try {
+          const employee = await User.findById(expense.userId);
+          if (employee) {
+            await sendMail(
+              employee.email,
+              "Your Expense Has Been Paid",
+              `<p>Hi ${employee.name},</p>
+               <p>Your expense of
+               <strong>₦${expense.amount.toLocaleString()}</strong>
+               in the <strong>${expense.category}</strong> category
+               has been marked as <strong>paid</strong>.</p>`
+            );
+          }
+        } catch (emailError) {
+          logger.error(`Paid email failed: ${emailError.message}`);
+        }
+      });
+    }
 
     res.redirect(`/expenses/${expense._id}`);
   } catch (error) {

@@ -33,12 +33,14 @@ router.get("/register", async (req, res) => {
 router.post("/register", async (req, res, next) => {
   try {
     const departments = await Department.find().sort({ name: 1 });
-    const { name, email, password, role, department } = req.body;
+    const { name, email, password, department } = req.body;
 
-    // Import User here to check for existing email
+    // Always force role to employee regardless of what form sends
+    // This prevents anyone tampering with the hidden field
+    const role = "employee";
+
     const User = require("../models/User");
 
-    // Check if email already exists
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).render("auth/register", {
@@ -47,13 +49,10 @@ router.post("/register", async (req, res, next) => {
       });
     }
 
-    // Create the new user
     await User.create({ name, email, password, role, department });
 
-    // Redirect to login after successful registration
     res.redirect("/login");
   } catch (error) {
-    // If something goes wrong reload the form with departments still visible
     try {
       const departments = await Department.find().sort({ name: 1 });
       res.status(500).render("auth/register", {

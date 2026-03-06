@@ -3,7 +3,6 @@
 <div class="auth-container">
   <h2>Create an Account</h2>
 
-  <!-- Show error if registration fails -->
   <% if (error) { %>
     <div class="alert alert-error"><%= error %></div>
   <% } %>
@@ -44,25 +43,13 @@
     </div>
 
     <div class="form-group">
-      <label for="role">Role</label>
-      <select id="role" name="role" required>
-        <option value="">Select your role</option>
-        <option value="employee">Employee</option>
-        <option value="manager">Manager</option>
-        <option value="finance">Finance</option>
-      </select>
-    </div>
-
-    <div class="form-group">
       <label for="department">Department</label>
       <select id="department" name="department" required>
         <option value="">Select your department</option>
-
-        <!-- Only loop if departments array exists and has items -->
         <% if (departments && departments.length > 0) { %>
           <% departments.forEach(dept => { %>
             <option value="<%= dept._id %>">
-              <%= dept.name %> — Budget: ₦<%= dept.budget.toLocaleString() %>
+              <%= dept.name %>
             </option>
           <% }) %>
         <% } else { %>
@@ -70,12 +57,20 @@
             No departments available — contact your admin
           </option>
         <% } %>
-
       </select>
     </div>
 
+    <!-- Role is always employee on self registration -->
+    <!-- Only finance admin can promote users via admin panel -->
+    <input type="hidden" name="role" value="employee" />
+
     <button type="submit" class="btn-primary">Register</button>
   </form>
+
+  <p style="color:#999; font-size:0.82rem; text-align:center; margin-top:12px;">
+    All new accounts are registered as Employee.
+    Contact your administrator to change your role.
+  </p>
 
   <p>Already have an account? <a href="/login">Login here</a></p>
 </div>
