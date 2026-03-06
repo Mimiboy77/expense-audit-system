@@ -1,11 +1,17 @@
 const nodemailer = require("nodemailer");
 const logger = require("./logger");
+const dns = require("dns");
 
+// Force Node.js to resolve DNS using IPv4 only
+// This prevents the ENETUNREACH IPv6 error on Windows
+dns.setDefaultResultOrder("ipv4first");
+
+// Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
-  family: 4,          // Force IPv4 — prevents ENETUNREACH on IPv6
+  family: 4,                    // Force IPv4 connection
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -13,16 +19,14 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false
   },
-  // Increase timeout so slow connections do not fail
-  connectionTimeout: 10000,   // 10 seconds to connect
-  greetingTimeout: 10000,     // 10 seconds for greeting
-  socketTimeout: 15000        // 15 seconds for socket
+  connectionTimeout: 15000,     // 15 seconds to connect
+  greetingTimeout: 15000,       // 15 seconds for greeting
+  socketTimeout: 20000          // 20 seconds for socket
 });
 
-// Verify connection on server start
+// Verify connection when server starts
 transporter.verify((error, success) => {
   if (error) {
-    // Log but do not crash the server over email config
     logger.error(`Mailer connection failed: ${error.message}`);
   } else {
     logger.info("Mailer is ready — Gmail SMTP connected successfully");
@@ -46,7 +50,6 @@ const sendMail = async (to, subject, html) => {
 
     logger.info(`Email sent to ${to} — Subject: ${subject}`);
   } catch (error) {
-    // Log failure but never throw — email must never crash the app
     logger.error(`Failed to send email to ${to} — ${error.message}`);
   }
 };
