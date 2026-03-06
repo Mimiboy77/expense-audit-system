@@ -4,16 +4,20 @@
 <div class="page-container">
   <h2>Audit Logs</h2>
 
-  <!-- Filter by specific expense -->
   <form action="/audit-logs" method="GET" class="filter-form">
     <input
       type="text"
       name="expenseId"
+      value="<%= filters.expenseId %>"
       placeholder="Filter by Expense ID (optional)"
     />
     <button type="submit" class="btn-primary">Filter</button>
     <a href="/audit-logs" class="btn-secondary">Clear</a>
   </form>
+
+  <p style="color:#777; font-size:0.88rem; margin-bottom:16px;">
+    Showing <%= logs.length %> of <%= pagination.totalLogs %> logs
+  </p>
 
   <% if (logs.length === 0) { %>
     <p class="empty-state">No audit logs found.</p>
@@ -32,7 +36,6 @@
         <% logs.forEach(log => { %>
           <tr>
             <td>
-              <!-- Link to the expense this log entry belongs to -->
               <a href="/expenses/<%= log.expenseId?._id %>">
                 <%= log.expenseId?.category %> —
                 ₦<%= log.expenseId?.amount?.toLocaleString() %>
@@ -45,11 +48,32 @@
             </td>
             <td><%= log.performedBy?.name || "N/A" %></td>
             <td><%= log.performedBy?.role || "N/A" %></td>
-            <td><%= new Date(log.timestamp).toLocaleString() %></td>
+            <td>
+              <%= new Date(log.timestamp).toLocaleString() %>
+            </td>
           </tr>
         <% }) %>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <% if (pagination.totalPages > 1) { %>
+      <div class="pagination">
+        <% if (pagination.page > 1) { %>
+          <a href="/audit-logs?page=<%= pagination.page - 1 %>&expenseId=<%= filters.expenseId %>"
+            class="btn-small">← Previous</a>
+        <% } %>
+
+        <span class="pagination-info">
+          Page <%= pagination.page %> of <%= pagination.totalPages %>
+        </span>
+
+        <% if (pagination.page < pagination.totalPages) { %>
+          <a href="/audit-logs?page=<%= pagination.page + 1 %>&expenseId=<%= filters.expenseId %>"
+            class="btn-small">Next →</a>
+        <% } %>
+      </div>
+    <% } %>
   <% } %>
 </div>
 

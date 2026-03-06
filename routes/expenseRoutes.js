@@ -7,7 +7,8 @@ const {
   createExpense,
   getExpenses,
   getExpenseById,
-  updateExpenseStatus
+  updateExpenseStatus,
+  getExpenseHistory
 } = require("../controllers/expenseController");
 const { protect } = require("../middlewares/auth");
 const { restrictTo } = require("../middlewares/role");
@@ -64,6 +65,8 @@ router.get("/submit", protect, async (req, res, next) => {
 
 // GET /expenses — list all expenses for logged in user
 router.get("/", protect, getExpenses);
+// GET /expenses/history — expense history with filters
+router.get("/history", protect, getExpenseHistory);
 
 // GET /expenses/:id — view single expense
 router.get("/:id", protect, getExpenseById);

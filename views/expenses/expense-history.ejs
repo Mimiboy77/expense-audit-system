@@ -1,0 +1,180 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <div class="page-header">
+    <h2>Expense History</h2>
+  </div>
+
+  <!-- Filter Form -->
+  <div class="detail-card" style="margin-bottom:24px;">
+    <form action="/expenses/history" method="GET"
+      class="filter-form">
+
+      <div class="form-group" style="margin:0; flex:1;">
+        <label>Month</label>
+        <select name="month">
+          <option value="">All Months</option>
+          <% const monthNames = [
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ];
+          monthNames.forEach((m, i) => { %>
+            <option value="<%= i + 1 %>"
+              <%= filters.month == i + 1 ? 'selected' : '' %>>
+              <%= m %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin:0; flex:1;">
+        <label>Year</label>
+        <input
+          type="number"
+          name="year"
+          value="<%= filters.year || '' %>"
+          placeholder="e.g. 2026"
+          min="2020"
+        />
+      </div>
+
+      <div class="form-group" style="margin:0; flex:1;">
+        <label>Status</label>
+        <select name="status">
+          <option value="">All Statuses</option>
+          <option value="submitted"
+            <%= filters.status === 'submitted' ? 'selected' : '' %>>
+            Submitted
+          </option>
+          <option value="approved"
+            <%= filters.status === 'approved' ? 'selected' : '' %>>
+            Approved
+          </option>
+          <option value="rejected"
+            <%= filters.status === 'rejected' ? 'selected' : '' %>>
+            Rejected
+          </option>
+          <option value="paid"
+            <%= filters.status === 'paid' ? 'selected' : '' %>>
+            Paid
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin:0; flex:1;">
+        <label>Category</label>
+        <input
+          type="text"
+          name="category"
+          value="<%= filters.category || '' %>"
+          placeholder="e.g. Travel"
+        />
+      </div>
+
+      <!-- Department filter only for finance -->
+      <% if (user.role === "finance" && departments.length > 0) { %>
+        <div class="form-group" style="margin:0; flex:1;">
+          <label>Department</label>
+          <select name="department">
+            <option value="">All Departments</option>
+            <% departments.forEach(dept => { %>
+              <option value="<%= dept._id %>"
+                <%= filters.department === dept._id.toString()
+                  ? 'selected' : '' %>>
+                <%= dept.name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+      <% } %>
+
+      <div style="display:flex; gap:8px; align-items:flex-end;">
+        <button type="submit" class="btn-primary">
+          Filter
+        </button>
+        <a href="/expenses/history" class="btn-secondary"
+          style="margin:0;">
+          Clear
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results summary -->
+  <p style="color:#777; font-size:0.88rem; margin-bottom:16px;">
+    Showing <%= expenses.length %> of
+    <%= pagination.totalExpenses %> expenses
+  </p>
+
+  <% if (expenses.length === 0) { %>
+    <p class="empty-state">No expenses found for the selected filters.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <% if (user.role !== 'employee') { %>
+            <th>Employee</th>
+          <% } %>
+          <th>Department</th>
+          <th>Category</th>
+          <th>Amount (₦)</th>
+          <th>Status</th>
+          <th>Period</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% expenses.forEach(expense => { %>
+          <tr>
+            <td>
+              <%= new Date(expense.createdAt).toLocaleDateString() %>
+            </td>
+            <% if (user.role !== 'employee') { %>
+              <td><%= expense.userId?.name || "Unknown" %></td>
+            <% } %>
+            <td><%= expense.departmentId?.name || "N/A" %></td>
+            <td><%= expense.category %></td>
+            <td>₦<%= expense.amount.toLocaleString() %></td>
+            <td>
+              <span class="status-badge status-<%= expense.status %>">
+                <%= expense.status %>
+              </span>
+            </td>
+            <td><%= expense.month %>/<%= expense.year %></td>
+            <td>
+              <a href="/expenses/<%= expense._id %>"
+                class="btn-small">View</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <!-- Pagination controls -->
+    <% if (pagination.totalPages > 1) { %>
+      <div class="pagination">
+        <% if (pagination.page > 1) { %>
+          <a href="/expenses/history?page=<%= pagination.page - 1 %>&month=<%= filters.month || '' %>&year=<%= filters.year || '' %>&status=<%= filters.status || '' %>&category=<%= filters.category || '' %>"
+            class="btn-small">
+            ← Previous
+          </a>
+        <% } %>
+
+        <span class="pagination-info">
+          Page <%= pagination.page %> of <%= pagination.totalPages %>
+        </span>
+
+        <% if (pagination.page < pagination.totalPages) { %>
+          <a href="/expenses/history?page=<%= pagination.page + 1 %>&month=<%= filters.month || '' %>&year=<%= filters.year || '' %>&status=<%= filters.status || '' %>&category=<%= filters.category || '' %>"
+            class="btn-small">
+            Next →
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

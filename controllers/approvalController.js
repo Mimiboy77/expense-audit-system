@@ -4,7 +4,8 @@ const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const { sendMail } = require("../utils/mailer");
-const logger = require("../utils/logger"); // Added logger import
+const logger = require("../utils/logger");
+const Notification = require("../models/Notification");
 
 // POST /approvals — manager or finance submits a decision
 const createApproval = async (req, res, next) => {
@@ -89,6 +90,31 @@ const createApproval = async (req, res, next) => {
       performedBy: req.user._id,
       action: decision
     });
+    
+    // Notify the employee of the decision
+await Notification.create({
+  userId: expense.userId._id || expense.userId,
+  expenseId: expense._id,
+  message: `Your expense of ₦${expense.amount.toLocaleString()} in ${expense.category} has been ${decision} by ${req.user.name}`,
+  type: decision
+});
+
+// If manager approved large expense notify all finance
+if (
+  req.user.role === "manager" &&
+  expense.amount >= 50000 &&
+  decision === "approved"
+) {
+  const financeUsers = await User.find({ role: "finance" });
+  for (const finance of financeUsers) {
+    await Notification.create({
+      userId: finance._id,
+      expenseId: expense._id,
+      message: `Large expense of ₦${expense.amount.toLocaleString()} from ${expense.departmentId?.name} requires your finance approval`,
+      type: "submitted"
+    });
+  }
+}
 
     // Send emails asynchronously so they never block
     // or crash the approval if Gmail is down or slow

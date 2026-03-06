@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 
-// Runs before any protected route handler
 const protect = async (req, res, next) => {
   try {
-    // Read token from the HttpOnly cookie set during login
     const token = req.cookies.token;
 
     if (!token) {
@@ -13,10 +12,8 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // Verify the token is valid and not expired
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach the full user object to the request for controllers to use
     req.user = await User.findById(decoded.id).select("-password");
 
     if (!req.user) {
@@ -25,10 +22,17 @@ const protect = async (req, res, next) => {
       });
     }
 
-    next(); // User is valid — move to the next middleware or controller
+    // Attach unread notification count to every request
+    // so the navbar can show the badge on every page
+    req.user.unreadCount = await Notification.countDocuments({
+      userId: req.user._id,
+      read: false
+    });
+
+    next();
   } catch (error) {
     return res.status(401).render("auth/login", {
-      error: "Session expired, please log in again"
+      error: "Session expired please log in again"
     });
   }
 };

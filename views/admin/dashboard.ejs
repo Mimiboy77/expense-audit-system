@@ -1,0 +1,57 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Admin Dashboard</h2>
+
+  <!-- System stats grid -->
+  <div class="dashboard-cards">
+    <div class="card">
+      <h3>Total Users</h3>
+      <p class="stat-number"><%= stats.totalUsers %></p>
+      <a href="/admin/users" class="btn-primary">Manage Users</a>
+    </div>
+
+    <div class="card">
+      <h3>Total Departments</h3>
+      <p class="stat-number"><%= stats.totalDepartments %></p>
+      <a href="/budget" class="btn-primary">View Budgets</a>
+    </div>
+
+    <div class="card">
+      <h3>Pending Expenses</h3>
+      <p class="stat-number" style="color:#e65100;">
+        <%= stats.pendingExpenses %>
+      </p>
+      <a href="/approvals" class="btn-primary">Review Now</a>
+    </div>
+
+    <div class="card">
+      <h3>Approved Expenses</h3>
+      <p class="stat-number" style="color:#2e7d32;">
+        <%= stats.approvedExpenses %>
+      </p>
+      <a href="/expenses/history?status=approved"
+        class="btn-primary">View All</a>
+    </div>
+
+    <div class="card">
+      <h3>Rejected Expenses</h3>
+      <p class="stat-number" style="color:#b71c1c;">
+        <%= stats.rejectedExpenses %>
+      </p>
+      <a href="/expenses/history?status=rejected"
+        class="btn-primary">View All</a>
+    </div>
+
+    <div class="card">
+      <h3>Total Expenses</h3>
+      <p class="stat-number"><%= stats.totalExpenses %></p>
+      <a href="/expenses/history" class="btn-primary">
+        View History
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

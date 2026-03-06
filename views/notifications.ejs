@@ -1,0 +1,75 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<div class="page-container">
+  <div class="page-header">
+    <h2>Notifications
+      <% if (unreadCount > 0) { %>
+        <span class="notification-badge-large">
+          <%= unreadCount %> unread
+        </span>
+      <% } %>
+    </h2>
+
+    <% if (notifications.length > 0) { %>
+      <form action="/notifications/read-all" method="POST">
+        <button type="submit" class="btn-secondary">
+          Mark All as Read
+        </button>
+      </form>
+    <% } %>
+  </div>
+
+  <% if (notifications.length === 0) { %>
+    <p class="empty-state">You have no notifications yet.</p>
+  <% } else { %>
+    <div class="notifications-list">
+      <% notifications.forEach(notification => { %>
+        <div class="notification-card
+          <%= notification.read ? 'read' : 'unread' %>">
+
+          <!-- Icon based on notification type -->
+          <div class="notification-icon type-<%= notification.type %>">
+            <% if (notification.type === 'submitted') { %>📋
+            <% } else if (notification.type === 'approved') { %>✅
+            <% } else if (notification.type === 'rejected') { %>❌
+            <% } else if (notification.type === 'paid') { %>💰
+            <% } else { %>🔔<% } %>
+          </div>
+
+          <div class="notification-content">
+            <p class="notification-message">
+              <%= notification.message %>
+            </p>
+            <small class="notification-time">
+              <%= new Date(notification.createdAt).toLocaleString() %>
+            </small>
+          </div>
+
+          <div class="notification-actions">
+            
+              <a href="/expenses/<%= notification.expenseId?._id %>"
+              class="btn-small"
+            >
+              View
+            </a>
+
+            <% if (!notification.read) { %>
+              <form
+                action="/notifications/read/<%= notification._id %>"
+                method="POST"
+                style="display:inline;"
+              >
+                <button type="submit" class="btn-small">
+                  Mark Read
+                </button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('./partials/footer') %>

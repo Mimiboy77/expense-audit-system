@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <h2>Edit User — <%= targetUser.name %></h2>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <div class="detail-card">
+    <form action="/admin/users/<%= targetUser._id %>/edit"
+      method="POST">
+
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value="<%= targetUser.name %>"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value="<%= targetUser.email %>"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+          <option value="employee"
+            <%= targetUser.role === 'employee' ? 'selected' : '' %>>
+            Employee
+          </option>
+          <option value="manager"
+            <%= targetUser.role === 'manager' ? 'selected' : '' %>>
+            Manager
+          </option>
+          <option value="finance"
+            <%= targetUser.role === 'finance' ? 'selected' : '' %>>
+            Finance
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="department">Department</label>
+        <select id="department" name="department" required>
+          <% departments.forEach(dept => { %>
+            <option value="<%= dept._id %>"
+              <%= targetUser.department?._id?.toString() ===
+                dept._id.toString() ? 'selected' : '' %>>
+              <%= dept.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        Save Changes
+      </button>
+    </form>
+  </div>
+
+  <a href="/admin/users" class="btn-secondary">← Back to Users</a>
+</div>
+
+<%- include('../partials/footer') %>

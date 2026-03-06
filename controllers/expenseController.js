@@ -4,9 +4,11 @@ const AuditLog = require("../models/AuditLog");
 const Budget = require("../models/Budget");
 const Comment = require("../models/Comment");
 const Approval = require("../models/Approval");
+const Department = require("../models/Department");
 const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
 const logger = require("../utils/logger");
+const Notification = require("../models/Notification");
 
 // POST /expenses — employee submits a new expense
 const createExpense = async (req, res, next) => {
@@ -84,6 +86,20 @@ const createExpense = async (req, res, next) => {
       performedBy: req.user._id,
       action: "created"
     });
+    // Notify all managers in the department
+const managers = await User.find({
+  department: deptObjectId,
+  role: "manager"
+});
+
+for (const manager of managers) {
+  await Notification.create({
+    userId: manager._id,
+    expenseId: expense._id,
+    message: `New expense of ₦${Number(amount).toLocaleString()} submitted by ${req.user.name} requires your approval`,
+    type: "submitted"
+  });
+}
 
     // Send email notifications asynchronously
     // This runs AFTER the response so it never blocks submission
@@ -192,10 +208,81 @@ const updateExpenseStatus = async (req, res, next) => {
     next(error);
   }
 };
+// GET /expenses/history — full expense history with filters
+const getExpenseHistory = async (req, res, next) => {
+  try {
+    const { month, year, status, category, department } = req.query;
+
+    // Build filter object based on role and query params
+    let filter = {};
+
+    // Employee only sees their own expenses
+    if (req.user.role === "employee") {
+      filter.userId = req.user._id;
+    }
+
+    // Manager only sees their department expenses
+    if (req.user.role === "manager") {
+      const managerDept = req.user.department._id
+        ? req.user.department._id
+        : req.user.department;
+      filter.departmentId = managerDept;
+    }
+
+    // Finance sees all expenses — no department filter
+
+    // Apply optional filters from query string
+    if (month) filter.month = Number(month);
+    if (year) filter.year = Number(year);
+    if (status) filter.status = status;
+    if (category) filter.category = new RegExp(category, "i");
+    if (department && req.user.role === "finance") {
+      filter.departmentId = department;
+    }
+
+    // Pagination setup
+    const page = Number(req.query.page) || 1;
+    const limit = 10; // 10 expenses per page
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalExpenses = await Expense.countDocuments(filter);
+    const totalPages = Math.ceil(totalExpenses / limit);
+
+    // Fetch expenses with pagination
+    const expenses = await Expense.find(filter)
+      .populate("userId", "name email")
+      .populate("departmentId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Fetch departments for filter dropdown — finance only
+    const departments = req.user.role === "finance"
+      ? await Department.find().sort({ name: 1 })
+      : [];
+
+    res.render("expenses/expense-history", {
+      expenses,
+      departments,
+      filters: { month, year, status, category, department },
+      pagination: {
+        page,
+        totalPages,
+        totalExpenses,
+        limit
+      },
+      user: req.user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   createExpense,
   getExpenses,
   getExpenseById,
-  updateExpenseStatus
+  updateExpenseStatus,
+  getExpenseHistory
 };

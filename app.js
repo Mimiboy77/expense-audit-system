@@ -42,6 +42,8 @@ app.use("/audit-logs", require("./routes/auditLogRoutes"));
 app.use("/reports", require("./routes/reportRoutes"));
 app.use("/comments", require("./routes/commentRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
+app.use("/notifications", require("./routes/notificationRoutes"));
+app.use("/admin", require("./routes/adminRoutes"));
 
 // --- Dashboard ---
 app.get(
