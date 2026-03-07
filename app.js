@@ -1,4 +1,5 @@
 const express = require("express");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const methodOverride = require("method-override");
@@ -35,6 +36,7 @@ app.get("/", (req, res) => {
 });
 
 // --- Mount all route files ---
+app.use("/", dashboardRoutes);
 app.use("/", require("./routes/authRoutes"));
 app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/approvals", require("./routes/approvalRoutes"));
@@ -44,15 +46,6 @@ app.use("/comments", require("./routes/commentRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
 app.use("/notifications", require("./routes/notificationRoutes"));
 app.use("/admin", require("./routes/adminRoutes"));
-
-// --- Dashboard ---
-app.get(
-  "/dashboard",
-  require("./middlewares/auth").protect,
-  (req, res) => {
-    res.render("dashboard", { user: req.user });
-  }
-);
 
 // --- 404 handler ---
 app.use((req, res) => {

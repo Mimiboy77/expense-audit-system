@@ -1,0 +1,113 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+  <div class="page-header">
+    <h2>Department Management</h2>
+    <a href="/admin" class="btn-secondary">← Admin Dashboard</a>
+  </div>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+  <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <!-- Create new department -->
+  <div class="detail-card" style="margin-bottom:24px;">
+    <h3 style="margin-bottom:16px;">Add New Department</h3>
+    <form action="/admin/departments" method="POST"
+      class="filter-form">
+
+      <div class="form-group" style="margin:0; flex:2;">
+        <label>Department Name</label>
+        <input
+          type="text"
+          name="name"
+          placeholder="e.g. Operations"
+          required
+        />
+      </div>
+
+      <div class="form-group" style="margin:0; flex:2;">
+        <label>Initial Monthly Budget (₦)</label>
+        <input
+          type="number"
+          name="budgetAmount"
+          placeholder="e.g. 500000"
+          min="0"
+        />
+      </div>
+
+      <div style="align-self:flex-end;">
+        <button type="submit" class="btn-primary">
+          Create Department
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Departments list -->
+  <% if (departments.length === 0) { %>
+    <p class="empty-state">No departments yet.</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Department Name</th>
+          <th>Users Assigned</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% departments.forEach(dept => { %>
+          <tr>
+            <td><strong><%= dept.name %></strong></td>
+            <td>
+              <%= dept.userCount %>
+              <%= dept.userCount === 1 ? "user" : "users" %>
+            </td>
+            <td>
+              <%= new Date(dept.createdAt).toLocaleDateString() %>
+            </td>
+            <td style="display:flex; gap:6px;">
+
+              <a href="/budget/edit/<%= dept._id %>"
+                class="btn-small">
+                Edit Budget
+              </a>
+
+              <!-- Only show delete if no users are assigned -->
+              <% if (dept.userCount === 0) { %>
+                <form
+                  action="/admin/departments/<%= dept._id %>/delete"
+                  method="POST"
+                  onsubmit="return confirm('Delete <%= dept.name %>? This cannot be undone.')"
+                >
+                  <button
+                    type="submit"
+                    class="btn-small"
+                    style="background:#e94560;"
+                  >
+                    Delete
+                  </button>
+                </form>
+              <% } else { %>
+                <span style="font-size:0.78rem; color:#aaa;
+                  padding:6px 10px;">
+                  Has users — cannot delete
+                </span>
+              <% } %>
+
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,53 +1,293 @@
 <%- include('./partials/header') %>
 <%- include('./partials/navbar') %>
 
-<div class="dashboard-container">
-  <h1>Welcome, <%= user.name %></h1>
-  <p class="role-badge"><%= user.role %></p>
+<!-- Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<div class="page-container">
+  <div class="page-header">
+    <h2>Dashboard</h2>
+    <span style="color:#999; font-size:0.88rem;">
+      Welcome back, <%= user.name %>
+    </span>
+  </div>
+
+  <!-- Stats Cards -->
   <div class="dashboard-cards">
-
-    <!-- Every role sees this -->
     <div class="card">
-      <h3>My Expenses</h3>
-      <p>View and track all your submitted expenses</p>
-      <a href="/expenses" class="btn-primary">View Expenses</a>
+      <h3>Total Expenses</h3>
+      <p class="stat-number"><%= stats.totalExpenses %></p>
+    </div>
+    <div class="card">
+      <h3>Pending Approval</h3>
+      <p class="stat-number" style="color:#e65100;">
+        <%= stats.pendingExpenses %>
+      </p>
+    </div>
+    <div class="card">
+      <h3>Approved</h3>
+      <p class="stat-number" style="color:#2e7d32;">
+        <%= stats.approvedExpenses %>
+      </p>
+    </div>
+    <div class="card">
+      <h3>Rejected</h3>
+      <p class="stat-number" style="color:#b71c1c;">
+        <%= stats.rejectedExpenses %>
+      </p>
+    </div>
+    <div class="card">
+      <h3>Paid</h3>
+      <p class="stat-number" style="color:#1565c0;">
+        <%= stats.paidExpenses %>
+      </p>
+    </div>
+    <div class="card">
+      <h3>This Month (₦)</h3>
+      <p class="stat-number" style="font-size:1.5rem;">
+        ₦<%= stats.monthlyTotal.toLocaleString() %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-grid">
+
+    <!-- Monthly Spending Bar Chart — full width -->
+    <div class="chart-card chart-wide">
+      <h3>Monthly Spending — <%= charts.monthly.year %></h3>
+      <canvas id="monthlyChart" height="100"></canvas>
     </div>
 
-    <!-- Employee gets a submit shortcut -->
-    <% if (user.role === "employee") { %>
-      <div class="card">
-        <h3>Submit Expense</h3>
-        <p>Submit a new expense for approval</p>
-        <a href="/expenses/submit" class="btn-primary">Submit Now</a>
+    <!-- Department Doughnut Chart — manager and finance only -->
+    <% if (user.role === "finance" || user.role === "manager") { %>
+      <div class="chart-card">
+        <h3>Spending by Department</h3>
+        <canvas id="deptChart" height="200"></canvas>
       </div>
     <% } %>
 
-    <!-- Manager and finance see pending approvals -->
-    <% if (user.role === "manager" || user.role === "finance") { %>
-      <div class="card">
-        <h3>Approvals</h3>
-        <p>Review and action pending expense approvals</p>
-        <a href="/approvals" class="btn-primary">View Approvals</a>
-      </div>
-    <% } %>
-
-    <!-- Finance only cards -->
-    <% if (user.role === "finance") { %>
-      <div class="card">
-        <h3>Audit Logs</h3>
-        <p>View the full immutable audit trail</p>
-        <a href="/audit-logs" class="btn-primary">View Logs</a>
-      </div>
-
-      <div class="card">
-        <h3>Reports</h3>
-        <p>Generate monthly expense reports as CSV</p>
-        <a href="/reports" class="btn-primary">Generate Report</a>
-      </div>
-    <% } %>
+    <!-- Category Horizontal Bar Chart -->
+    <div class="chart-card">
+      <h3>Top Spending Categories</h3>
+      <canvas id="categoryChart" height="200"></canvas>
+    </div>
 
   </div>
+
+  <!-- Activity Feed -->
+  <div class="detail-card" style="margin-top:28px;">
+    <h3 style="margin-bottom:16px;">Recent Activity</h3>
+
+    <% if (recentExpenses.length === 0) { %>
+      <p class="empty-state">No recent activity yet.</p>
+    <% } else { %>
+      <div class="activity-feed">
+        <% recentExpenses.forEach(expense => { %>
+          <div class="activity-item">
+
+            <div class="activity-icon">
+              <% if (expense.status === 'submitted') { %>📋
+              <% } else if (expense.status === 'approved') { %>✅
+              <% } else if (expense.status === 'rejected') { %>❌
+              <% } else if (expense.status === 'paid') { %>💰
+              <% } %>
+            </div>
+
+            <div class="activity-content">
+              <p>
+                <strong>
+                  <%= expense.userId?.name || "Unknown" %>
+                </strong>
+                submitted a
+                <strong><%= expense.category %></strong>
+                expense of
+                <strong>
+                  ₦<%= expense.amount.toLocaleString() %>
+                </strong>
+                <% if (expense.departmentId) { %>
+                  from
+                  <strong><%= expense.departmentId.name %></strong>
+                <% } %>
+              </p>
+              <small style="color:#aaa;">
+                <%= new Date(expense.createdAt).toLocaleString() %>
+              </small>
+            </div>
+
+            <div>
+              <span class="status-badge
+                status-<%= expense.status %>">
+                <%= expense.status %>
+              </span>
+            </div>
+
+            <div>
+              <a href="/expenses/<%= expense._id %>"
+                class="btn-small">
+                View
+              </a>
+            </div>
+
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <a href="/expenses/submit" class="btn-primary">
+      + Submit Expense
+    </a>
+    <% if (user.role === "manager" || user.role === "finance") { %>
+      <a href="/approvals" class="btn-secondary">
+        Pending Approvals
+        <% if (stats.pendingExpenses > 0) { %>
+          (<%= stats.pendingExpenses %>)
+        <% } %>
+      </a>
+    <% } %>
+    <a href="/expenses/history" class="btn-secondary">
+      Expense History
+    </a>
+    <% if (user.role === "finance") { %>
+      <a href="/reports" class="btn-secondary">
+        Download Report
+      </a>
+      <a href="/admin" class="btn-secondary">
+        Admin Panel
+      </a>
+    <% } %>
+  </div>
+
 </div>
+
+<!-- Chart.js Scripts -->
+<script>
+  const chartColors = [
+    "#e94560","#1565c0","#2e7d32","#e65100",
+    "#6a1b9a","#00838f","#f9a825","#37474f"
+  ];
+
+  const monthNames = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  // --- Monthly Bar Chart ---
+  new Chart(
+    document.getElementById("monthlyChart").getContext("2d"),
+    {
+      type: "bar",
+      data: {
+        labels: monthNames,
+        datasets: [{
+          label: "Total Spending (₦)",
+          data: <%- JSON.stringify(charts.monthly.data) %>,
+          backgroundColor: "#e9456099",
+          borderColor: "#e94560",
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx =>
+                "₦" + ctx.parsed.y.toLocaleString()
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: val =>
+                "₦" + val.toLocaleString()
+            }
+          }
+        }
+      }
+    }
+  );
+
+  // --- Department Doughnut Chart ---
+  <% if (user.role === "finance" || user.role === "manager") { %>
+  new Chart(
+    document.getElementById("deptChart").getContext("2d"),
+    {
+      type: "doughnut",
+      data: {
+        labels: <%- JSON.stringify(charts.departments.labels) %>,
+        datasets: [{
+          data: <%- JSON.stringify(charts.departments.data) %>,
+          backgroundColor: chartColors,
+          borderWidth: 2,
+          borderColor: "#fff"
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { font: { size: 11 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx =>
+                ctx.label + ": ₦" +
+                ctx.parsed.toLocaleString()
+            }
+          }
+        }
+      }
+    }
+  );
+  <% } %>
+
+  // --- Category Horizontal Bar Chart ---
+  new Chart(
+    document.getElementById("categoryChart").getContext("2d"),
+    {
+      type: "bar",
+      data: {
+        labels: <%- JSON.stringify(charts.categories.labels) %>,
+        datasets: [{
+          label: "Total (₦)",
+          data: <%- JSON.stringify(charts.categories.data) %>,
+          backgroundColor: chartColors,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx =>
+                "₦" + ctx.parsed.x.toLocaleString()
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              callback: val =>
+                "₦" + val.toLocaleString()
+            }
+          }
+        }
+      }
+    }
+  );
+</script>
 
 <%- include('./partials/footer') %>

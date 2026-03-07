@@ -2,39 +2,76 @@
 <%- include('./partials/navbar') %>
 
 <div class="page-container">
-  <h2>Generate Monthly Report</h2>
-  <p>Select a month and year to download a CSV of all expenses for that period.</p>
+  <h2>Reports</h2>
 
-  <form action="/reports" method="GET" class="filter-form">
+  <div class="detail-card">
+    <form action="" method="GET" id="reportForm">
 
-    <div class="form-group">
-      <label for="month">Month</label>
-      <select id="month" name="month" required>
-        <option value="">Select month</option>
-        <% const months = [
-          "January","February","March","April","May","June",
-          "July","August","September","October","November","December"
-        ];
-        months.forEach((m, i) => { %>
-          <option value="<%= i + 1 %>"><%= m %></option>
-        <% }) %>
-      </select>
-    </div>
+      <div class="form-group">
+        <label>Month</label>
+        <select name="month">
+          <option value="">All Months</option>
+          <% [
+            "January","February","March","April",
+            "May","June","July","August",
+            "September","October","November","December"
+          ].forEach((m, i) => { %>
+            <option value="<%= i + 1 %>"><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="year">Year</label>
-      <input
-        type="number"
-        id="year"
-        name="year"
-        value="<%= new Date().getFullYear() %>"
-        min="2020"
-        required
-      />
-    </div>
+      <div class="form-group">
+        <label>Year</label>
+        <input
+          type="number"
+          name="year"
+          placeholder="e.g. 2026"
+          min="2020"
+          value="<%= new Date().getFullYear() %>"
+        />
+      </div>
 
-    <button type="submit" class="btn-primary">Download CSV Report</button>
-  </form>
+      <div class="form-group">
+        <label>Department</label>
+        <select name="department">
+          <option value="">All Departments</option>
+          <% departments.forEach(dept => { %>
+            <option value="<%= dept._id %>">
+              <%= dept.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:8px;">
+
+        <!-- CSV Download -->
+        <button
+          type="submit"
+          formaction="/reports/csv"
+          class="btn-secondary"
+        >
+          Download CSV
+        </button>
+
+        <!-- PDF Download -->
+        <button
+          type="submit"
+          formaction="/reports/pdf"
+          class="btn-primary"
+        >
+          Download PDF
+        </button>
+
+      </div>
+    </form>
+  </div>
+
+  <p style="color:#999; font-size:0.82rem; margin-top:12px;">
+    Leave filters empty to export all expenses.
+    PDF includes a summary section and formatted table.
+  </p>
 </div>
 
 <%- include('./partials/footer') %>
